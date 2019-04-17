@@ -5,9 +5,13 @@ declare(strict_types=1);
 namespace Lendable\Interview\Interpolation\Service\Fee;
 
 use Lendable\Interview\Interpolation\Model\LoanApplication;
+use Lendable\Interview\Interpolation\Exceptions\{ExceptionLoanAmountTooLow, ExceptionLoanAmountTooHigh, ExceptionInvalidLoanPeriod};
+
 
 class FeeCalculatorStandard implements FeeCalculatorInterface
 {
+    const MINIMUM_LOAN_AMOUNT = 1000;
+    const MAXIMUM_LOAN_AMOUNT = 20000;
     const TWELVE_MONTH_THRESHOLDS = [
         '1000' => 50,
         '2000' => 90,
@@ -30,7 +34,6 @@ class FeeCalculatorStandard implements FeeCalculatorInterface
         '19000' => 380,
         '20000' => 400,
     ];
-
     const TWENTY_FOUR_MONTH_THRESHOLD = [
         '1000'  => 70,
         '2000'  => 100,
@@ -56,13 +59,16 @@ class FeeCalculatorStandard implements FeeCalculatorInterface
 
     /**
      * @param LoanApplication $application
+     * @throws \Exception
      * @return float
      */
     public function calculate(LoanApplication $application): float
     {
-        // @todo - throw exceptions
-        // min 1000
-        // max 20000
+        if ($application->getAmount() < self::MINIMUM_LOAN_AMOUNT) {
+            throw new ExceptionLoanAmountTooLow('The loan amount is too low');
+        } else if ($application->getAmount() > self::MAXIMUM_LOAN_AMOUNT) {
+            throw new ExceptionLoanAmountTooHigh('The loan amount is too high');
+        }
 
         $fee = 0.00;
         $threshold = $this->getThresholdForPeriod($application->getTerm());
@@ -106,11 +112,14 @@ class FeeCalculatorStandard implements FeeCalculatorInterface
 
     /**
      * @param int $period
+     * @throws ExceptionInvalidLoanPeriod
      * @return array
      */
     private function getThresholdForPeriod(int $period): array
     {
-        // @todo check period is 12 or 24
+        if (false === in_array($period, [12, 24])) {
+            throw new ExceptionInvalidLoanPeriod('Invalid load period provided');
+        }
 
         if ($period === 24) {
             return self::TWENTY_FOUR_MONTH_THRESHOLD;
@@ -135,6 +144,7 @@ class FeeCalculatorStandard implements FeeCalculatorInterface
      * @param float $totalLower
      * @param float $totalUpper
      * @param float $customTotal
+     * @throws \Exception
      * @return float
      */
     private function getNearestValidTotal(float $totalLower, float $totalUpper, float $customTotal): float
@@ -147,7 +157,8 @@ class FeeCalculatorStandard implements FeeCalculatorInterface
             }
         }
 
-        // @todo throw exception here
+        // Should never get here but throw a generic exception just in case
+        throw new \Exception('Unable to assign a valid nearest total');
     }
 
 }

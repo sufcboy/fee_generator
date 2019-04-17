@@ -10,6 +10,15 @@ use PHPUnit\Framework\TestCase;
 
 class FeeCalculatorStandardTest extends TestCase
 {
+    /**
+     * @var FeeCalculatorStandard
+     */
+    private $calculator;
+
+    public function setUp()
+    {
+        $this->calculator = new FeeCalculatorStandard();
+    }
 
     /**
      * @param int $term
@@ -20,10 +29,9 @@ class FeeCalculatorStandardTest extends TestCase
      */
     public function testCalculate(int $term, float $loanAmount, float $expectedFee): void
     {
-        $calculator = new FeeCalculatorStandard();
         $loanApplication = new LoanApplication($term, $loanAmount);
 
-        $this->assertSame($expectedFee, $calculator->calculate($loanApplication));
+        $this->assertSame($expectedFee, $this->calculator->calculate($loanApplication));
     }
 
     /**
@@ -39,6 +47,7 @@ class FeeCalculatorStandardTest extends TestCase
             [   12,         3000,       90  ],
             [   12,         3525,       105  ],
             [   12,         4000,       115  ],
+            // Assume as 5000 is lower we decrement
             [   12,         4600,       110  ],
             [   12,         5000,       100  ],
             [   12,         6000,       120  ],
@@ -77,5 +86,35 @@ class FeeCalculatorStandardTest extends TestCase
             [   24,         19000,       760  ],
             [   24,         20000,       800  ],
         ];
+    }
+
+    /**
+     * @expectedException Lendable\Interview\Interpolation\Exceptions\ExceptionLoanAmountTooLow
+     * @expectedExceptionMessage The loan amount is too low
+     */
+    public function testLoanTooLowForCalculate()
+    {
+        $loanApplication = new LoanApplication(12, FeeCalculatorStandard::MINIMUM_LOAN_AMOUNT - 1);
+        $this->calculator->calculate($loanApplication);
+    }
+
+    /**
+     * @expectedException Lendable\Interview\Interpolation\Exceptions\ExceptionLoanAmountTooHigh
+     * @expectedExceptionMessage The loan amount is too high
+     */
+    public function testLoanTooHighForCalculate()
+    {
+        $loanApplication = new LoanApplication(12, FeeCalculatorStandard::MAXIMUM_LOAN_AMOUNT + 1);
+        $this->calculator->calculate($loanApplication);
+    }
+
+    /**
+     * @expectedException Lendable\Interview\Interpolation\Exceptions\ExceptionInvalidLoanPeriod
+     * @expectedExceptionMessage Invalid load period provided
+     */
+    public function testInvalidPeriodForCalculate()
+    {
+        $loanApplication = new LoanApplication(18, FeeCalculatorStandard::MAXIMUM_LOAN_AMOUNT - 1);
+        $this->calculator->calculate($loanApplication);
     }
 }
