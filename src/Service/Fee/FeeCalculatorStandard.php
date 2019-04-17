@@ -70,7 +70,7 @@ class FeeCalculatorStandard implements FeeCalculatorInterface
             throw new ExceptionLoanAmountTooHigh('The loan amount is too high');
         }
 
-        $fee = 0.00;
+        $fee = 0;
         $threshold = $this->getThresholdForPeriod($application->getTerm());
 
         // Amount is on the threshold
@@ -91,9 +91,9 @@ class FeeCalculatorStandard implements FeeCalculatorInterface
                 $perPoundFee = ($upperFee - $lowerFee) / ($upper - $lower);
                 $initialFee = (($perPoundFee*($application->getAmount()-$lower)))+$lowerFee;
                 $total = $application->getAmount() + $initialFee;
-                
+
                 // Already divisible by 5
-                if ($total % 5 === 0) {
+                if (fmod($total, 5) === 0.00) {
                     $fee = $initialFee;
                 } else {
                     $validTotal = $this->getNearestValidTotal(
@@ -107,7 +107,7 @@ class FeeCalculatorStandard implements FeeCalculatorInterface
             }
         }
 
-        return $fee;
+        return round($fee, 2,PHP_ROUND_HALF_UP);
     }
 
     /**

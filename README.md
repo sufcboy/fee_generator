@@ -89,3 +89,10 @@ The fee structure doesn't follow particular algorithm and it is possible that sa
 £19000: £760
 £20000: £800
 ```
+
+# Solution
+
+```
+ ./vendor/phpunit/phpunit/phpunit src/Tests/
+ 
+```
